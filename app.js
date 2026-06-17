@@ -1,48 +1,41 @@
 /* A Chinese Poem a Day — app logic
-   - Picks a deterministic "poem of the day" from POEMS based on the date,
-     so everyone sees the same poem on a given day and it rotates daily.
-   - Lets you browse forward/back, jump to today, pick random, or open the list.
+   - Deterministic "poem of the day" from POEMS based on the date, so the poem
+     rotates daily and is the same for everyone on a given date.
+   - Sticky controls; supplementary content (translation / interpretation /
+     characters / source) lives behind tabs to keep the page short.
    - Tap any character for its individual meaning. */
 
 (function () {
   "use strict";
 
-  const app = document.querySelector(".app");
   const root = document.getElementById("poemRoot");
   const dateLabel = document.getElementById("dateLabel");
   const charPop = document.getElementById("charPop");
 
-  // Day 0 = a fixed epoch so the rotation is stable across machines.
-  const EPOCH = Date.UTC(2024, 0, 1); // 2024-01-01
+  const EPOCH = Date.UTC(2024, 0, 1); // stable rotation anchor
   const DAY_MS = 24 * 60 * 60 * 1000;
 
-  // dayNumber: whole days since EPOCH for a given Date (local midnight).
+  let viewDate = new Date();
+  let activeTab = "trans"; // persists across day changes
+
   function dayNumber(date) {
     const local = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
     return Math.floor((local - EPOCH) / DAY_MS);
   }
-
   function poemIndexForDay(dayNum) {
     const n = POEMS.length;
     return ((dayNum % n) + n) % n;
   }
-
-  // State: which date we're viewing.
-  let viewDate = new Date();
-
   function fmtDate(d) {
-    return d.toLocaleDateString(undefined, {
-      weekday: "long", year: "numeric", month: "long", day: "numeric"
-    });
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
   }
-
   function esc(s) {
     return String(s).replace(/[&<>"']/g, c =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
   function renderLineHanzi(line) {
-    return line.chars.map((ch, i) =>
+    return line.chars.map(ch =>
       `<span class="hz" data-c="${esc(ch.c)}" data-p="${esc(ch.p)}" data-m="${esc(ch.m)}">${esc(ch.c)}</span>`
     ).join("");
   }
@@ -52,11 +45,11 @@
     const poem = POEMS[poemIndexForDay(dayNum)];
 
     const today = dayNumber(new Date());
-    let dayWord = fmtDate(viewDate);
-    if (dayNum === today) dayWord = "Today · " + dayWord;
-    else if (dayNum === today - 1) dayWord = "Yesterday · " + fmtDate(viewDate);
-    else if (dayNum === today + 1) dayWord = "Tomorrow · " + fmtDate(viewDate);
-    dateLabel.textContent = dayWord;
+    let prefix = "";
+    if (dayNum === today) prefix = "Today · ";
+    else if (dayNum === today - 1) prefix = "Yesterday · ";
+    else if (dayNum === today + 1) prefix = "Tomorrow · ";
+    dateLabel.textContent = prefix + fmtDate(viewDate);
 
     const linesHtml = poem.lines.map(line => `
       <div class="line">
@@ -65,7 +58,14 @@
         <div class="line-trans">${esc(line.translation)}</div>
       </div>`).join("");
 
-    const charCells = poem.lines.flatMap(l => l.chars).map(ch => `
+    // dedupe repeated characters so the grid stays compact
+    const seen = new Set();
+    const uniqueChars = poem.lines.flatMap(l => l.chars).filter(ch => {
+      if (seen.has(ch.c)) return false;
+      seen.add(ch.c);
+      return true;
+    });
+    const charCells = uniqueChars.map(ch => `
       <div class="char-cell">
         <span class="cc-char">${esc(ch.c)}</span>
         <span class="cc-body">
@@ -86,33 +86,54 @@
 
       <div class="lines">${linesHtml}</div>
 
-      <div class="section trans">
-        <h3>Translation</h3>
+      <div class="tabs" role="tablist">
+        <button class="tab" data-tab="trans" role="tab">Translation</button>
+        <button class="tab" data-tab="note" role="tab">Interpretation</button>
+        <button class="tab" data-tab="chars" role="tab">Characters</button>
+        <button class="tab" data-tab="source" role="tab">Source</button>
+      </div>
+
+      <div class="tab-panel trans" data-panel="trans">
         <p>${esc(poem.translation)}</p>
       </div>
-
-      <div class="section note">
-        <h3>Interpretation</h3>
+      <div class="tab-panel note" data-panel="note" hidden>
         <p>${esc(poem.note)}</p>
       </div>
-
-      <div class="section chars">
-        <h3>Character by character</h3>
+      <div class="tab-panel chars" data-panel="chars" hidden>
         <div class="char-grid">${charCells}</div>
       </div>
-
-      <div class="section source">
-        <h3>Source</h3>
-        <p class="source-line"><span class="src-zh">${esc(poem.source)}</span></p>
+      <div class="tab-panel source" data-panel="source" hidden>
+        <p class="source-line">
+          <span class="lbl">Source</span>
+          <span class="src-zh">${esc(poem.source)}</span><br>
+          ${esc(poem.authorHanzi)} ${esc(poem.author)} · ${esc(poem.dynasty)}
+        </p>
       </div>
     `;
 
+    setTab(activeTab);
     hidePop();
   }
 
+  // ---- Tabs ----
+  function setTab(name) {
+    activeTab = name;
+    root.querySelectorAll(".tab").forEach(t =>
+      t.classList.toggle("active", t.dataset.tab === name));
+    root.querySelectorAll(".tab-panel").forEach(p =>
+      p.hidden = p.dataset.panel !== name);
+  }
+
+  root.addEventListener("click", e => {
+    const tab = e.target.closest(".tab");
+    if (tab) { setTab(tab.dataset.tab); return; }
+    const hz = e.target.closest(".hz");
+    if (hz) { e.stopPropagation(); showPop(hz); }
+  });
+
   // ---- Character popover ----
   function showPop(el) {
-    document.querySelectorAll(".hz.active").forEach(n => n.classList.remove("active"));
+    root.querySelectorAll(".hz.active").forEach(n => n.classList.remove("active"));
     el.classList.add("active");
     charPop.querySelector(".cp-char").textContent = el.dataset.c;
     charPop.querySelector(".cp-pinyin").textContent = el.dataset.p;
@@ -124,13 +145,8 @@
   }
   function hidePop() {
     charPop.hidden = true;
-    document.querySelectorAll(".hz.active").forEach(n => n.classList.remove("active"));
+    root.querySelectorAll(".hz.active").forEach(n => n.classList.remove("active"));
   }
-
-  root.addEventListener("click", e => {
-    const hz = e.target.closest(".hz");
-    if (hz) { e.stopPropagation(); showPop(hz); }
-  });
   document.addEventListener("click", e => {
     if (!e.target.closest(".hz") && !e.target.closest(".char-pop")) hidePop();
   });
@@ -146,13 +162,9 @@
   document.getElementById("todayBtn").addEventListener("click", () => { viewDate = new Date(); render(); });
 
   document.getElementById("randomBtn").addEventListener("click", () => {
-    // jump to a random day that lands on a different poem
     const curr = poemIndexForDay(dayNumber(viewDate));
     let target = curr;
-    while (target === curr && POEMS.length > 1) {
-      target = Math.floor(Math.random() * POEMS.length);
-    }
-    // find nearest day offset producing that poem index
+    while (target === curr && POEMS.length > 1) target = Math.floor(Math.random() * POEMS.length);
     const base = dayNumber(viewDate);
     for (let off = 1; off <= POEMS.length; off++) {
       if (poemIndexForDay(base + off) === target) { step(off); return; }
@@ -196,13 +208,17 @@
     render();
   });
 
-  // ---- Toggles ----
-  document.getElementById("togglePinyin").addEventListener("change", e => {
-    app.classList.toggle("hide-pinyin", !e.target.checked);
-  });
-  document.getElementById("toggleTranslation").addEventListener("change", e => {
-    app.classList.toggle("hide-trans", !e.target.checked);
-  });
+  // ---- Toggle chips ----
+  function wireToggle(btnId, bodyClass) {
+    const btn = document.getElementById(btnId);
+    btn.addEventListener("click", () => {
+      const on = btn.classList.toggle("on");
+      btn.setAttribute("aria-pressed", String(on));
+      document.body.classList.toggle(bodyClass, !on);
+    });
+  }
+  wireToggle("togglePinyin", "hide-pinyin");
+  wireToggle("toggleTranslation", "hide-trans");
 
   render();
 })();

@@ -10,44 +10,42 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;700&family=Noto+Serif:ital@0;1&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <div class="app">
-    <header class="topbar">
+  <!-- Sticky control bar: always reachable -->
+  <header class="topbar">
+    <div class="topbar-inner">
       <div class="brand">
         <span class="brand-zh">每日一诗</span>
-        <span class="brand-en">A Chinese Poem a Day</span>
       </div>
       <div class="date-strip">
         <button id="prevDay" class="nav-btn" title="Previous poem" aria-label="Previous poem">‹</button>
         <span id="dateLabel" class="date-label"></span>
         <button id="nextDay" class="nav-btn" title="Next poem" aria-label="Next poem">›</button>
       </div>
-    </header>
-
-    <main id="poemRoot" class="poem"></main>
-
-    <div class="toolbar">
-      <label class="toggle"><input type="checkbox" id="togglePinyin" checked /> Pinyin</label>
-      <label class="toggle"><input type="checkbox" id="toggleTranslation" checked /> Translation</label>
-      <button id="todayBtn" class="pill">Today</button>
-      <button id="randomBtn" class="pill">Random</button>
-      <button id="browseBtn" class="pill">Browse all</button>
-    </div>
-
-    <div class="hint">Tip: tap any Chinese character to see its individual meaning.</div>
-
-    <div id="browseSheet" class="sheet" hidden>
-      <div class="sheet-inner">
-        <div class="sheet-head">
-          <h2>All poems</h2>
-          <button id="closeBrowse" class="pill ghost">Close</button>
-        </div>
-        <ul id="browseList" class="browse-list"></ul>
+      <div class="quick-toggles">
+        <button id="togglePinyin" class="chip on" aria-pressed="true">拼 Pinyin</button>
+        <button id="toggleTranslation" class="chip on" aria-pressed="true">译 English</button>
       </div>
     </div>
+  </header>
 
-    <footer class="footer">
-      Classic 唐诗 (Tang poetry) · translations &amp; character glosses for study
-    </footer>
+  <div class="app">
+    <main id="poemRoot" class="poem"></main>
+    <div class="actions">
+      <button id="todayBtn" class="pill">Today</button>
+      <button id="randomBtn" class="pill">Random</button>
+      <button id="browseBtn" class="pill primary">Browse all poems</button>
+    </div>
+    <footer class="footer">Classic 唐诗 · tap any character for its meaning</footer>
+  </div>
+
+  <div id="browseSheet" class="sheet" hidden>
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <h2>All poems</h2>
+        <button id="closeBrowse" class="pill ghost">Close</button>
+      </div>
+      <ul id="browseList" class="browse-list"></ul>
+    </div>
   </div>
 
   <div id="charPop" class="char-pop" hidden>
