@@ -49,15 +49,6 @@ existing block and fill in:
 
 The daily rotation picks up new poems automatically.
 
-### Generating poems with Claude (autoresearch)
-
-To scale the collection without hand-authoring each entry, the [`tools/`](tools/)
-folder contains an offline pipeline that uses Claude to research and draft new
-poems in this exact schema, validates them (every line's glosses must align 1:1
-with its characters), and merges the reviewed entries into `poems.js`. It runs on
-your machine with your own API key — nothing is added to the web app, which stays
-static. See [tools/README.md](tools/README.md).
-
 ## Files
 
 | File | Purpose |
