@@ -6,6 +6,8 @@ breakdown, a literary interpretation, and the author / dynasty / source.
 
 No build step and no dependencies — just open `index.html` in a browser.
 
+Includes **36 classic poems** (Tang and Song dynasties) — over a month of daily content.
+
 ## Features
 
 - **Poem of the Day** — the date deterministically selects a poem, so it rotates daily.
@@ -15,6 +17,10 @@ No build step and no dependencies — just open `index.html` in a browser.
   character in the poem for an instant pop-up of its pinyin and meaning.
 - **Literary interpretation** of each poem.
 - **Author, dynasty, and source** for every poem.
+- **Dark mode** — toggle in the top bar; defaults to your system preference.
+- **Saved preferences** — pinyin/English toggles, active tab, and theme persist
+  across visits (via `localStorage`).
+- **Swipe** left/right on touch devices to move between days.
 - Browse controls: step day-by-day, jump to **Today**, pick **Random**, or **Browse all**.
 
 ## Running

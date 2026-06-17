@@ -1,8 +1,9 @@
 /* A Chinese Poem a Day — app logic
    - Deterministic "poem of the day" from POEMS based on the date, so the poem
      rotates daily and is the same for everyone on a given date.
-   - Sticky controls; supplementary content (translation / interpretation /
-     characters / source) lives behind tabs to keep the page short.
+   - Sticky controls; supplementary content behind tabs to keep the page short.
+   - Preferences (pinyin / English / active tab / theme) persist in localStorage.
+   - Swipe left/right on touch devices to move between days.
    - Tap any character for its individual meaning. */
 
 (function () {
@@ -14,10 +15,30 @@
 
   const EPOCH = Date.UTC(2024, 0, 1); // stable rotation anchor
   const DAY_MS = 24 * 60 * 60 * 1000;
+  const PREF_KEY = "cp_prefs_v1";
 
+  // ---- Preferences ----
+  const prefs = loadPrefs();
+  let activeTab = prefs.tab || "trans";
   let viewDate = new Date();
-  let activeTab = "trans"; // persists across day changes
 
+  function loadPrefs() {
+    let p = {};
+    try { p = JSON.parse(localStorage.getItem(PREF_KEY)) || {}; } catch (e) { p = {}; }
+    if (typeof p.pinyin !== "boolean") p.pinyin = true;
+    if (typeof p.trans !== "boolean") p.trans = true;
+    if (!p.theme) {
+      p.theme = (window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+    }
+    return p;
+  }
+  function savePrefs() {
+    prefs.tab = activeTab;
+    try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); } catch (e) { /* ignore */ }
+  }
+
+  // ---- Helpers ----
   function dayNumber(date) {
     const local = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
     return Math.floor((local - EPOCH) / DAY_MS);
@@ -33,13 +54,13 @@
     return String(s).replace(/[&<>"']/g, c =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
-
   function renderLineHanzi(line) {
     return line.chars.map(ch =>
       `<span class="hz" data-c="${esc(ch.c)}" data-p="${esc(ch.p)}" data-m="${esc(ch.m)}">${esc(ch.c)}</span>`
     ).join("");
   }
 
+  // ---- Render ----
   function render() {
     const dayNum = dayNumber(viewDate);
     const poem = POEMS[poemIndexForDay(dayNum)];
@@ -58,7 +79,6 @@
         <div class="line-trans">${esc(line.translation)}</div>
       </div>`).join("");
 
-    // dedupe repeated characters so the grid stays compact
     const seen = new Set();
     const uniqueChars = poem.lines.flatMap(l => l.chars).filter(ch => {
       if (seen.has(ch.c)) return false;
@@ -111,22 +131,23 @@
       </div>
     `;
 
-    setTab(activeTab);
+    setTab(activeTab, false);
     hidePop();
   }
 
   // ---- Tabs ----
-  function setTab(name) {
+  function setTab(name, persist) {
     activeTab = name;
     root.querySelectorAll(".tab").forEach(t =>
       t.classList.toggle("active", t.dataset.tab === name));
     root.querySelectorAll(".tab-panel").forEach(p =>
       p.hidden = p.dataset.panel !== name);
+    if (persist) savePrefs();
   }
 
   root.addEventListener("click", e => {
     const tab = e.target.closest(".tab");
-    if (tab) { setTab(tab.dataset.tab); return; }
+    if (tab) { setTab(tab.dataset.tab, true); return; }
     const hz = e.target.closest(".hz");
     if (hz) { e.stopPropagation(); showPop(hz); }
   });
@@ -171,6 +192,24 @@
     }
   });
 
+  // ---- Swipe (touch) ----
+  let touchX = 0, touchY = 0, touching = false;
+  document.addEventListener("touchstart", e => {
+    if (e.target.closest(".sheet")) return; // let the browse list scroll
+    const t = e.changedTouches[0];
+    touchX = t.clientX; touchY = t.clientY; touching = true;
+  }, { passive: true });
+  document.addEventListener("touchend", e => {
+    if (!touching) return;
+    touching = false;
+    if (!document.getElementById("browseSheet").hidden) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchX, dy = t.clientY - touchY;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      step(dx < 0 ? 1 : -1); // swipe left → next, right → previous
+    }
+  }, { passive: true });
+
   // ---- Browse sheet ----
   const sheet = document.getElementById("browseSheet");
   const browseList = document.getElementById("browseList");
@@ -209,16 +248,33 @@
   });
 
   // ---- Toggle chips ----
-  function wireToggle(btnId, bodyClass) {
+  function wireToggle(btnId, prefKey, bodyClass) {
     const btn = document.getElementById(btnId);
-    btn.addEventListener("click", () => {
-      const on = btn.classList.toggle("on");
-      btn.setAttribute("aria-pressed", String(on));
-      document.body.classList.toggle(bodyClass, !on);
-    });
+    function apply() {
+      btn.classList.toggle("on", prefs[prefKey]);
+      btn.setAttribute("aria-pressed", String(prefs[prefKey]));
+      document.body.classList.toggle(bodyClass, !prefs[prefKey]);
+    }
+    btn.addEventListener("click", () => { prefs[prefKey] = !prefs[prefKey]; apply(); savePrefs(); });
+    apply();
   }
-  wireToggle("togglePinyin", "hide-pinyin");
-  wireToggle("toggleTranslation", "hide-trans");
+  wireToggle("togglePinyin", "pinyin", "hide-pinyin");
+  wireToggle("toggleTranslation", "trans", "hide-trans");
+
+  // ---- Theme ----
+  const themeBtn = document.getElementById("toggleTheme");
+  function applyTheme() {
+    const dark = prefs.theme === "dark";
+    document.body.classList.toggle("dark", dark);
+    themeBtn.textContent = dark ? "☀" : "☾";
+    themeBtn.title = dark ? "Switch to light mode" : "Switch to dark mode";
+  }
+  themeBtn.addEventListener("click", () => {
+    prefs.theme = prefs.theme === "dark" ? "light" : "dark";
+    applyTheme();
+    savePrefs();
+  });
+  applyTheme();
 
   render();
 })();

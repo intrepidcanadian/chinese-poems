@@ -96,6 +96,12 @@ html, body {
   border-color: var(--accent-soft);
   color: var(--accent);
 }
+.icon-chip {
+  font-size: 15px;
+  line-height: 1;
+  padding: 5px 9px;
+  color: var(--accent);
+}
 
 /* ---------- App shell ---------- */
 .app {
@@ -344,7 +350,7 @@ body.hide-trans .line-trans { display: none; }
 .char-pop {
   position: fixed;
   z-index: 60;
-  background: var(--ink);
+  background: #2a251f;
   color: #fff;
   border-radius: 10px;
   padding: 8px 12px;
@@ -364,7 +370,7 @@ body.hide-trans .line-trans { display: none; }
   bottom: -6px; left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: var(--ink);
+  border-top-color: #2a251f;
   border-bottom: 0;
 }
 .cp-char { font-family: "Noto Serif SC", serif; font-size: 22px; color: var(--gold); }
@@ -386,3 +392,29 @@ body.hide-trans .line-trans { display: none; }
   .pill.primary { margin-left: 0; flex: 1; text-align: center; }
   .tab { font-size: 12.5px; padding: 8px 4px; }
 }
+
+/* ---------- Dark mode ---------- */
+body.dark {
+  --bg: #17140f;
+  --bg-card: #211d16;
+  --ink: #ece3d3;
+  --ink-soft: #a99e8b;
+  --accent: #e58c73;
+  --accent-soft: #c8745f;
+  --gold: #d6af60;
+  --line: #38322a;
+  --shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #211c14 0%, var(--bg) 55%) fixed;
+}
+body.dark .topbar { background: rgba(23, 20, 15, 0.92); }
+body.dark .char-cell { background: #28231b; }
+body.dark .nav-btn,
+body.dark .chip,
+body.dark .pill { background: #2a251c; }
+body.dark .chip.on { background: rgba(229, 140, 115, 0.16); }
+body.dark .tab:hover,
+body.dark .browse-list li:hover { background: #2c271e; }
+body.dark .tab.active { background: rgba(229, 140, 115, 0.16); }
+body.dark .pill.primary { background: var(--accent); color: #221a16; border-color: var(--accent); }
+body.dark .pill.primary:hover { background: #f0a085; }
