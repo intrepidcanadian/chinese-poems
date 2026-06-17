@@ -36,7 +36,7 @@
       <button id="randomBtn" class="pill">Random</button>
       <button id="browseBtn" class="pill primary">Browse all poems</button>
     </div>
-    <footer class="footer">Classic 唐诗 · tap any character for its meaning</footer>
+    <footer class="footer">Classic 唐诗 · tap any character to see how it's written</footer>
   </div>
 
   <div id="browseSheet" class="sheet" hidden>
@@ -55,6 +55,35 @@
     <span class="cp-meaning"></span>
   </div>
 
+  <!-- Stroke-order writer / practice panel -->
+  <div id="writerSheet" class="sheet writer-sheet" hidden>
+    <div class="writer-card">
+      <button id="writerClose" class="writer-close" aria-label="Close">✕</button>
+      <div class="writer-head">
+        <span class="writer-pinyin"></span>
+        <span class="writer-meaning"></span>
+      </div>
+      <div class="writer-stage">
+        <svg class="writer-grid-bg" viewBox="0 0 230 230" aria-hidden="true">
+          <rect x="1" y="1" width="228" height="228" fill="none" stroke="var(--line)" stroke-width="2" rx="6" />
+          <line x1="115" y1="2" x2="115" y2="228" stroke="var(--accent-soft)" stroke-width="1" stroke-dasharray="5 6" opacity=".45" />
+          <line x1="2" y1="115" x2="228" y2="115" stroke="var(--accent-soft)" stroke-width="1" stroke-dasharray="5 6" opacity=".45" />
+          <line x1="6" y1="6" x2="224" y2="224" stroke="var(--accent-soft)" stroke-width="1" stroke-dasharray="5 6" opacity=".3" />
+          <line x1="224" y1="6" x2="6" y2="224" stroke="var(--accent-soft)" stroke-width="1" stroke-dasharray="5 6" opacity=".3" />
+        </svg>
+        <div id="writerTarget" class="writer-target"></div>
+        <div id="writerMsg" class="writer-msg" hidden></div>
+      </div>
+      <div class="writer-controls">
+        <button id="writerAnimate" class="pill primary">▶ Animate</button>
+        <button id="writerPractice" class="pill">✎ Practice</button>
+        <button id="writerReset" class="pill ghost">Reset</button>
+      </div>
+      <div class="writer-hint">In Practice mode, draw each stroke on the grid with your mouse or finger.</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.0/dist/hanzi-writer.min.js"></script>
   <script src="poems.js"></script>
   <script src="app.js"></script>
 </body>

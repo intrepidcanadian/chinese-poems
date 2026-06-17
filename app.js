@@ -86,7 +86,7 @@
       return true;
     });
     const charCells = uniqueChars.map(ch => `
-      <div class="char-cell">
+      <div class="char-cell" data-c="${esc(ch.c)}" data-p="${esc(ch.p)}" data-m="${esc(ch.m)}">
         <span class="cc-char">${esc(ch.c)}</span>
         <span class="cc-body">
           <span class="cc-pinyin">${esc(ch.p)}</span>
@@ -148,8 +148,8 @@
   root.addEventListener("click", e => {
     const tab = e.target.closest(".tab");
     if (tab) { setTab(tab.dataset.tab, true); return; }
-    const hz = e.target.closest(".hz");
-    if (hz) { e.stopPropagation(); showPop(hz); }
+    const cell = e.target.closest(".hz, .char-cell");
+    if (cell) { e.stopPropagation(); openWriter(cell.dataset); }
   });
 
   // ---- Character popover ----
@@ -172,6 +172,82 @@
     if (!e.target.closest(".hz") && !e.target.closest(".char-pop")) hidePop();
   });
   window.addEventListener("scroll", hidePop, true);
+
+  // ---- Stroke-order writer ----
+  const writerSheet = document.getElementById("writerSheet");
+  const writerTarget = document.getElementById("writerTarget");
+  const writerMsg = document.getElementById("writerMsg");
+  let writer = null;
+
+  function writerColors() {
+    const dark = document.body.classList.contains("dark");
+    return {
+      strokeColor: dark ? "#ece3d3" : "#2b2622",
+      radicalColor: dark ? "#e58c73" : "#9c3b2e",
+      outlineColor: dark ? "#4a4239" : "#e0d6c4",
+      drawingColor: dark ? "#e58c73" : "#9c3b2e",
+      highlightColor: dark ? "#e58c73" : "#c8745f"
+    };
+  }
+  function showWriterMsg(text) { writerMsg.textContent = text; writerMsg.hidden = false; }
+
+  function buildWriter(ch, animate) {
+    writerTarget.innerHTML = "";
+    writerMsg.hidden = true;
+    writer = null;
+    if (typeof HanziWriter === "undefined") {
+      showWriterMsg("Stroke-order library couldn't load (no network connection?).");
+      return;
+    }
+    const c = writerColors();
+    writer = HanziWriter.create(writerTarget, ch, {
+      width: 230, height: 230, padding: 8,
+      showOutline: true,
+      strokeColor: c.strokeColor,
+      radicalColor: c.radicalColor,
+      outlineColor: c.outlineColor,
+      drawingColor: c.drawingColor,
+      highlightColor: c.highlightColor,
+      strokeAnimationSpeed: 1,
+      delayBetweenStrokes: 280,
+      onLoadCharDataError: () =>
+        showWriterMsg("Stroke-order data isn't available for this character yet.")
+    });
+    if (animate) writer.animateCharacter();
+  }
+
+  function openWriter(ds) {
+    writerSheet.querySelector(".writer-pinyin").textContent = ds.p || "";
+    writerSheet.querySelector(".writer-meaning").textContent = ds.m || "";
+    writerSheet.hidden = false;
+    buildWriter(ds.c, true);
+    writerSheet.dataset.char = ds.c;
+  }
+  function closeWriter() {
+    writerSheet.hidden = true;
+    writerTarget.innerHTML = "";
+    writer = null;
+  }
+
+  document.getElementById("writerAnimate").addEventListener("click", () => {
+    if (writer) { writerMsg.hidden = true; writer.animateCharacter(); }
+  });
+  document.getElementById("writerPractice").addEventListener("click", () => {
+    if (!writer) return;
+    writerMsg.hidden = true;
+    writer.quiz({
+      showHintAfterMisses: 2,
+      onComplete: () => showWriterMsg("✓ Nicely written! Tap Reset to try again.")
+    });
+  });
+  document.getElementById("writerReset").addEventListener("click", () => {
+    buildWriter(writerSheet.dataset.char, true);
+  });
+  document.getElementById("writerClose").addEventListener("click", closeWriter);
+  writerSheet.addEventListener("click", e => { if (e.target === writerSheet) closeWriter(); });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && !writerSheet.hidden) closeWriter();
+  });
 
   // ---- Navigation ----
   function step(days) {
