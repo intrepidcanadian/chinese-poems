@@ -216,9 +216,25 @@
     if (animate) writer.animateCharacter();
   }
 
+  function renderDefinition(ch) {
+    const def = document.getElementById("writerDef");
+    const entry = (typeof CHARDICT !== "undefined") ? CHARDICT[ch] : null;
+    let html = '<div class="wd-label">Definition</div>';
+    if (entry && entry.length) {
+      html += entry.map(r =>
+        `<div class="wd-row"><span class="wd-py">${esc(r.py)}</span>` +
+        `<span class="wd-defs">${esc(r.defs.join("; "))}</span></div>`).join("");
+      html += '<div class="wd-src">Definitions from CC-CEDICT (CC BY-SA)</div>';
+    } else {
+      html += '<div class="wd-row"><span class="wd-defs">No dictionary entry found for this character.</span></div>';
+    }
+    def.innerHTML = html;
+  }
+
   function openWriter(ds) {
     writerSheet.querySelector(".writer-pinyin").textContent = ds.p || "";
     writerSheet.querySelector(".writer-meaning").textContent = ds.m || "";
+    renderDefinition(ds.c);
     writerSheet.hidden = false;
     buildWriter(ds.c, true);
     writerSheet.dataset.char = ds.c;
