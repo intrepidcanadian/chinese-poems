@@ -27,6 +27,7 @@
     try { p = JSON.parse(localStorage.getItem(PREF_KEY)) || {}; } catch (e) { p = {}; }
     if (typeof p.pinyin !== "boolean") p.pinyin = true;
     if (typeof p.trans !== "boolean") p.trans = true;
+    if (p.mode !== "poems" && p.mode !== "plaques") p.mode = "poems";
     if (!p.theme) {
       p.theme = (window.matchMedia &&
         window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
@@ -38,13 +39,17 @@
     try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); } catch (e) { /* ignore */ }
   }
 
+  // ---- Active dataset (poems vs. door-plaque blessings) ----
+  function activeSet() { return prefs.mode === "plaques" ? PLAQUES : POEMS; }
+  function defaultTab() { return prefs.mode === "plaques" ? "meaning" : "trans"; }
+
   // ---- Helpers ----
   function dayNumber(date) {
     const local = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
     return Math.floor((local - EPOCH) / DAY_MS);
   }
-  function poemIndexForDay(dayNum) {
-    const n = POEMS.length;
+  function indexForDay(dayNum, set) {
+    const n = set.length;
     return ((dayNum % n) + n) % n;
   }
   function fmtDate(d) {
@@ -62,8 +67,9 @@
 
   // ---- Render ----
   function render() {
+    const set = activeSet();
     const dayNum = dayNumber(viewDate);
-    const poem = POEMS[poemIndexForDay(dayNum)];
+    const item = set[indexForDay(dayNum, set)];
 
     const today = dayNumber(new Date());
     let prefix = "";
@@ -72,6 +78,25 @@
     else if (dayNum === today + 1) prefix = "Tomorrow · ";
     dateLabel.textContent = prefix + fmtDate(viewDate);
 
+    if (prefs.mode === "plaques") renderPlaque(item);
+    else renderPoem(item);
+
+    setTab(activeTab, false);
+    hidePop();
+  }
+
+  function charCellsHtml(chars) {
+    return chars.map(ch => `
+      <div class="char-cell" data-c="${esc(ch.c)}" data-p="${esc(ch.p)}" data-m="${esc(ch.m)}">
+        <span class="cc-char">${esc(ch.c)}</span>
+        <span class="cc-body">
+          <span class="cc-pinyin">${esc(ch.p)}</span>
+          <span class="cc-meaning">${esc(ch.m)}</span>
+        </span>
+      </div>`).join("");
+  }
+
+  function renderPoem(poem) {
     const linesHtml = poem.lines.map(line => `
       <div class="line">
         <div class="line-hanzi">${renderLineHanzi(line)}</div>
@@ -85,14 +110,7 @@
       seen.add(ch.c);
       return true;
     });
-    const charCells = uniqueChars.map(ch => `
-      <div class="char-cell" data-c="${esc(ch.c)}" data-p="${esc(ch.p)}" data-m="${esc(ch.m)}">
-        <span class="cc-char">${esc(ch.c)}</span>
-        <span class="cc-body">
-          <span class="cc-pinyin">${esc(ch.p)}</span>
-          <span class="cc-meaning">${esc(ch.m)}</span>
-        </span>
-      </div>`).join("");
+    const charCells = charCellsHtml(uniqueChars);
 
     root.innerHTML = `
       <div class="poem-head">
@@ -130,16 +148,53 @@
         </p>
       </div>
     `;
+  }
 
-    setTab(activeTab, false);
-    hidePop();
+  function renderPlaque(p) {
+    const phraseChars = p.chars.map(ch =>
+      `<span class="hz" data-c="${esc(ch.c)}" data-p="${esc(ch.p)}" data-m="${esc(ch.m)}">${esc(ch.c)}</span>`
+    ).join("");
+    const charCells = charCellsHtml(p.chars);
+
+    root.innerHTML = `
+      <div class="plaque-board">
+        <div class="plaque-hang" aria-hidden="true"></div>
+        <div class="plaque-phrase">${phraseChars}</div>
+        <div class="plaque-pinyin line-pinyin">${esc(p.pinyin)}</div>
+      </div>
+
+      <div class="poem-head plaque-head">
+        <div class="poem-title-en">${esc(p.title)}</div>
+        <div class="poem-meta"><span class="plaque-cat">${esc(p.category)}</span></div>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button class="tab" data-tab="meaning" role="tab">Meaning</button>
+        <button class="tab" data-tab="chars" role="tab">Characters</button>
+        <button class="tab" data-tab="usage" role="tab">Where it hangs</button>
+      </div>
+
+      <div class="tab-panel meaning" data-panel="meaning">
+        <p>${esc(p.meaning)}</p>
+      </div>
+      <div class="tab-panel chars" data-panel="chars" hidden>
+        <div class="char-grid">${charCells}</div>
+      </div>
+      <div class="tab-panel note" data-panel="usage" hidden>
+        <p>${esc(p.usage)}</p>
+      </div>
+    `;
   }
 
   // ---- Tabs ----
   function setTab(name, persist) {
+    const tabs = root.querySelectorAll(".tab");
+    // The set of tabs differs by mode; if the requested tab isn't present
+    // (e.g. a poem tab carried over into plaque mode), use the first one.
+    const names = Array.from(tabs).map(t => t.dataset.tab);
+    if (!names.includes(name)) name = names[0] || defaultTab();
     activeTab = name;
-    root.querySelectorAll(".tab").forEach(t =>
-      t.classList.toggle("active", t.dataset.tab === name));
+    tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === name));
     root.querySelectorAll(".tab-panel").forEach(p =>
       p.hidden = p.dataset.panel !== name);
     if (persist) savePrefs();
@@ -275,12 +330,13 @@
   document.getElementById("todayBtn").addEventListener("click", () => { viewDate = new Date(); render(); });
 
   document.getElementById("randomBtn").addEventListener("click", () => {
-    const curr = poemIndexForDay(dayNumber(viewDate));
+    const set = activeSet();
+    const curr = indexForDay(dayNumber(viewDate), set);
     let target = curr;
-    while (target === curr && POEMS.length > 1) target = Math.floor(Math.random() * POEMS.length);
+    while (target === curr && set.length > 1) target = Math.floor(Math.random() * set.length);
     const base = dayNumber(viewDate);
-    for (let off = 1; off <= POEMS.length; off++) {
-      if (poemIndexForDay(base + off) === target) { step(off); return; }
+    for (let off = 1; off <= set.length; off++) {
+      if (indexForDay(base + off, set) === target) { step(off); return; }
     }
   });
 
@@ -307,15 +363,30 @@
   const browseList = document.getElementById("browseList");
 
   function openBrowse() {
-    const curr = poemIndexForDay(dayNumber(viewDate));
-    browseList.innerHTML = POEMS.map((p, i) => `
+    const set = activeSet();
+    const curr = indexForDay(dayNumber(viewDate), set);
+    const heading = sheet.querySelector(".sheet-head h2");
+    if (heading) heading.textContent = prefs.mode === "plaques" ? "All blessings" : "All poems";
+    browseList.innerHTML = set.map((p, i) => {
+      if (prefs.mode === "plaques") {
+        return `
+      <li data-i="${i}" class="${i === curr ? "current" : ""}">
+        <span>
+          <span class="bl-title-zh">${esc(p.phrase)}</span>
+          <span class="bl-title-en"> — ${esc(p.title)}</span>
+        </span>
+        <span class="bl-author">${esc(p.category)}</span>
+      </li>`;
+      }
+      return `
       <li data-i="${i}" class="${i === curr ? "current" : ""}">
         <span>
           <span class="bl-title-zh">${esc(p.titleHanzi)}</span>
           <span class="bl-title-en"> — ${esc(p.title)}</span>
         </span>
         <span class="bl-author">${esc(p.authorHanzi)} ${esc(p.author)}</span>
-      </li>`).join("");
+      </li>`;
+    }).join("");
     sheet.hidden = false;
   }
   function closeBrowse() { sheet.hidden = true; }
@@ -327,10 +398,11 @@
   browseList.addEventListener("click", e => {
     const li = e.target.closest("li");
     if (!li) return;
+    const set = activeSet();
     const target = parseInt(li.dataset.i, 10);
     const base = dayNumber(viewDate);
-    for (let off = 0; off < POEMS.length; off++) {
-      if (poemIndexForDay(base + off) === target) {
+    for (let off = 0; off < set.length; off++) {
+      if (indexForDay(base + off, set) === target) {
         viewDate = new Date(viewDate.getTime() + off * DAY_MS);
         break;
       }
@@ -368,5 +440,37 @@
   });
   applyTheme();
 
+  // ---- Mode switch (poems ⇄ door blessings) ----
+  const brandZh = document.querySelector(".brand-zh");
+  const browseBtn = document.getElementById("browseBtn");
+  const footerEl = document.getElementById("footer");
+
+  function updateChrome() {
+    const plaque = prefs.mode === "plaques";
+    document.querySelectorAll(".mode-btn").forEach(b =>
+      b.classList.toggle("active", b.dataset.mode === prefs.mode));
+    document.body.classList.toggle("plaque-mode", plaque);
+    if (brandZh) brandZh.textContent = plaque ? "门楣吉语" : "每日一诗";
+    if (browseBtn) browseBtn.textContent = plaque ? "Browse all blessings" : "Browse all poems";
+    if (footerEl) {
+      footerEl.textContent = plaque
+        ? "Auspicious 匾额 · tap any character to see how it's written"
+        : "Classic 唐诗 · tap any character to see how it's written";
+    }
+  }
+
+  function setMode(mode) {
+    if (mode === prefs.mode) return;
+    prefs.mode = mode;
+    activeTab = defaultTab();
+    updateChrome();
+    savePrefs();
+    render();
+  }
+
+  document.querySelectorAll(".mode-btn").forEach(btn =>
+    btn.addEventListener("click", () => setMode(btn.dataset.mode)));
+
+  updateChrome();
   render();
 })();

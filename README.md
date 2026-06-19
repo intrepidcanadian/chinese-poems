@@ -6,10 +6,16 @@ breakdown, a literary interpretation, and the author / dynasty / source.
 
 No build step and no dependencies — just open `index.html` in a browser.
 
-Includes **36 classic poems** (Tang and Song dynasties) — over a month of daily content.
+Includes **36 classic poems** (Tang and Song dynasties) plus **18 auspicious
+plaque blessings** — over a month of daily content.
 
 ## Features
 
+- **Two modes** — switch between **诗 Poems** and **匾 Door blessings** (匾额/横批),
+  the auspicious phrases families carve onto a wooden board and hang above a door.
+  Each mode has its own daily rotation, Random, and Browse. Blessings render as a
+  carved gold-on-wood plaque banner with per-character glosses and a "where it hangs"
+  note explaining the custom or allusion behind each phrase.
 - **Poem of the Day** — the date deterministically selects a poem, so it rotates daily.
 - **Pinyin** with tone marks (toggleable).
 - **Line-by-line + full English translation** (toggleable).
@@ -49,6 +55,17 @@ existing block and fill in:
 
 The daily rotation picks up new poems automatically.
 
+## Adding plaque blessings
+
+Door blessings live in [`plaques.js`](plaques.js) as a plain list. To add one, copy an
+existing block and fill in:
+
+- `phrase` (the characters as hung), `pinyin`, `title` (English), `category`
+- `chars[]`, each character `{ c, p, m }` = character, pinyin, meaning
+- `meaning` (what the phrase wishes for) and `usage` (where it hangs / the allusion)
+
+The Door blessings rotation picks up new entries automatically.
+
 ## Files
 
 | File | Purpose |
@@ -57,6 +74,7 @@ The daily rotation picks up new poems automatically.
 | `style.css` | Styling (classical serif theme, light + dark) |
 | `app.js` | Rotation, navigation, tabs, theme, stroke-order writer |
 | `poems.js` | The poem dataset |
+| `plaques.js` | The door-blessing (匾额) dataset |
 | `chardict.js` | Per-character dictionary definitions |
 
 ## Credits

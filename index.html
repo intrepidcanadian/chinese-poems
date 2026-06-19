@@ -30,13 +30,17 @@
   </header>
 
   <div class="app">
+    <div class="mode-switch" role="tablist" aria-label="Content">
+      <button id="modePoems" class="mode-btn" data-mode="poems" role="tab">诗 Poems</button>
+      <button id="modePlaques" class="mode-btn" data-mode="plaques" role="tab">匾 Door blessings</button>
+    </div>
     <main id="poemRoot" class="poem"></main>
     <div class="actions">
       <button id="todayBtn" class="pill">Today</button>
       <button id="randomBtn" class="pill">Random</button>
       <button id="browseBtn" class="pill primary">Browse all poems</button>
     </div>
-    <footer class="footer">Classic 唐诗 · tap any character to see how it's written</footer>
+    <footer id="footer" class="footer">Classic 唐诗 · tap any character to see how it's written</footer>
   </div>
 
   <div id="browseSheet" class="sheet" hidden>
@@ -86,6 +90,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.0/dist/hanzi-writer.min.js"></script>
   <script src="poems.js"></script>
+  <script src="plaques.js"></script>
   <script src="chardict.js"></script>
   <script src="app.js"></script>
 </body>

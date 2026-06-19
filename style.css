@@ -110,6 +110,137 @@ html, body {
   padding: 22px 18px 48px;
 }
 
+/* ---------- Mode switch (poems ⇄ door blessings) ---------- */
+.mode-switch {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin: 0 auto 18px;
+  padding: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  width: fit-content;
+}
+.mode-btn {
+  font-family: inherit;
+  font-size: 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-soft);
+  padding: 7px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .14s ease;
+}
+.mode-btn:hover { color: var(--accent); }
+.mode-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+body.dark .mode-btn.active { color: #221a16; }
+
+/* ---------- Plaque (匾额) — carved wooden banner ---------- */
+.plaque-head { margin: 22px 0 18px; text-align: center; }
+.plaque-cat {
+  display: inline-block;
+  font-size: 11.5px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* The wooden board, hung like a 匾额 above a door. */
+.plaque-board {
+  position: relative;
+  margin: 14px auto 6px;
+  width: 100%;
+  text-align: center;
+  padding: 30px 28px 24px;
+  border-radius: 12px;
+  color: #f0d585;
+  /* woodgrain: fine vertical streaks over a warm walnut gradient */
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 240, 210, 0.05) 0 2px,
+      rgba(0, 0, 0, 0.06) 2px 4px,
+      rgba(255, 240, 210, 0.02) 4px 7px),
+    linear-gradient(180deg, #7e5330 0%, #6a4426 48%, #512f17 100%);
+  /* layered carved frame: dark groove, gold inlay, dark groove */
+  box-shadow:
+    0 16px 34px rgba(40, 24, 8, 0.45),
+    inset 0 0 0 3px #3a2410,
+    inset 0 0 0 6px #c4a04a,
+    inset 0 0 0 9px #3a2410,
+    inset 0 3px 10px rgba(255, 226, 160, 0.10),
+    inset 0 -10px 24px rgba(0, 0, 0, 0.35);
+}
+/* a small brass ring so it reads as "hung" */
+.plaque-hang {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--gold);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #2a1c0d 0 55%, transparent 56%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+}
+
+.plaque-phrase {
+  font-family: "Noto Serif SC", serif;
+  font-size: 50px;
+  font-weight: 700;
+  letter-spacing: 12px;
+  /* trailing letter-spacing pushes content right; nudge back for centering */
+  text-indent: 12px;
+  line-height: 1.25;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  /* engraved-gold relief: dark shadow below, faint light catch above */
+  color: #f3d986;
+  text-shadow:
+    0 2px 1px rgba(0, 0, 0, 0.55),
+    0 -1px 0 rgba(255, 245, 210, 0.22);
+}
+.plaque-phrase .hz {
+  padding: 0 4px;
+  color: inherit;
+  border-radius: 8px;
+}
+.plaque-phrase .hz:hover { background: rgba(255, 224, 150, 0.18); color: #fff4d6; }
+.plaque-phrase .hz.active { background: rgba(255, 224, 150, 0.30); color: #fff; }
+
+.plaque-board .plaque-pinyin {
+  margin-top: 14px;
+  font-size: 15px;
+  color: #ecd6a4;
+  font-style: italic;
+  letter-spacing: .5px;
+}
+
+/* keep the wood rich and consistent in dark mode too */
+body.dark .plaque-board {
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 3px #2c1c0c,
+    inset 0 0 0 6px #b8923f,
+    inset 0 0 0 9px #2c1c0c,
+    inset 0 3px 10px rgba(255, 226, 160, 0.08),
+    inset 0 -10px 24px rgba(0, 0, 0, 0.45);
+}
+
+@media (max-width: 560px) {
+  .plaque-phrase { font-size: 38px; letter-spacing: 8px; text-indent: 8px; }
+  .plaque-board { padding: 26px 16px 20px; }
+}
+
 /* ---------- Poem card ---------- */
 .poem {
   background: var(--bg-card);
