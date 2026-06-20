@@ -1,9 +1,9 @@
 /* A Chinese Poem a Day — app logic
-   - Deterministic "poem of the day" from POEMS based on the date, so the poem
-     rotates daily and is the same for everyone on a given date.
-   - Sticky controls; supplementary content behind tabs to keep the page short.
-   - Preferences (pinyin / English / active tab / theme) persist in localStorage.
-   - Swipe left/right on touch devices to move between days.
+   - Shows only TODAY's item: a deterministic "poem of the day" (or door
+     blessing) chosen from the date, the same for everyone on a given day.
+     There is no browsing across days — a new one simply appears tomorrow.
+   - Supplementary content behind tabs to keep the page short.
+   - Preferences (pinyin / English / active tab / theme / mode) persist in localStorage.
    - Tap any character for its individual meaning. */
 
 (function () {
@@ -20,7 +20,6 @@
   // ---- Preferences ----
   const prefs = loadPrefs();
   let activeTab = prefs.tab || "trans";
-  let viewDate = new Date();
 
   function loadPrefs() {
     let p = {};
@@ -68,15 +67,10 @@
   // ---- Render ----
   function render() {
     const set = activeSet();
-    const dayNum = dayNumber(viewDate);
-    const item = set[indexForDay(dayNum, set)];
+    const today = new Date();
+    const item = set[indexForDay(dayNumber(today), set)];
 
-    const today = dayNumber(new Date());
-    let prefix = "";
-    if (dayNum === today) prefix = "Today · ";
-    else if (dayNum === today - 1) prefix = "Yesterday · ";
-    else if (dayNum === today + 1) prefix = "Tomorrow · ";
-    dateLabel.textContent = prefix + fmtDate(viewDate);
+    dateLabel.textContent = "Today · " + fmtDate(today);
 
     if (prefs.mode === "plaques") renderPlaque(item);
     else renderPoem(item);
@@ -320,97 +314,6 @@
     if (e.key === "Escape" && !writerSheet.hidden) closeWriter();
   });
 
-  // ---- Navigation ----
-  function step(days) {
-    viewDate = new Date(viewDate.getTime() + days * DAY_MS);
-    render();
-  }
-  document.getElementById("prevDay").addEventListener("click", () => step(-1));
-  document.getElementById("nextDay").addEventListener("click", () => step(1));
-  document.getElementById("todayBtn").addEventListener("click", () => { viewDate = new Date(); render(); });
-
-  document.getElementById("randomBtn").addEventListener("click", () => {
-    const set = activeSet();
-    const curr = indexForDay(dayNumber(viewDate), set);
-    let target = curr;
-    while (target === curr && set.length > 1) target = Math.floor(Math.random() * set.length);
-    const base = dayNumber(viewDate);
-    for (let off = 1; off <= set.length; off++) {
-      if (indexForDay(base + off, set) === target) { step(off); return; }
-    }
-  });
-
-  // ---- Swipe (touch) ----
-  let touchX = 0, touchY = 0, touching = false;
-  document.addEventListener("touchstart", e => {
-    if (e.target.closest(".sheet")) return; // let the browse list scroll
-    const t = e.changedTouches[0];
-    touchX = t.clientX; touchY = t.clientY; touching = true;
-  }, { passive: true });
-  document.addEventListener("touchend", e => {
-    if (!touching) return;
-    touching = false;
-    if (!document.getElementById("browseSheet").hidden) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - touchX, dy = t.clientY - touchY;
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-      step(dx < 0 ? 1 : -1); // swipe left → next, right → previous
-    }
-  }, { passive: true });
-
-  // ---- Browse sheet ----
-  const sheet = document.getElementById("browseSheet");
-  const browseList = document.getElementById("browseList");
-
-  function openBrowse() {
-    const set = activeSet();
-    const curr = indexForDay(dayNumber(viewDate), set);
-    const heading = sheet.querySelector(".sheet-head h2");
-    if (heading) heading.textContent = prefs.mode === "plaques" ? "All blessings" : "All poems";
-    browseList.innerHTML = set.map((p, i) => {
-      if (prefs.mode === "plaques") {
-        return `
-      <li data-i="${i}" class="${i === curr ? "current" : ""}">
-        <span>
-          <span class="bl-title-zh">${esc(p.phrase)}</span>
-          <span class="bl-title-en"> — ${esc(p.title)}</span>
-        </span>
-        <span class="bl-author">${esc(p.category)}</span>
-      </li>`;
-      }
-      return `
-      <li data-i="${i}" class="${i === curr ? "current" : ""}">
-        <span>
-          <span class="bl-title-zh">${esc(p.titleHanzi)}</span>
-          <span class="bl-title-en"> — ${esc(p.title)}</span>
-        </span>
-        <span class="bl-author">${esc(p.authorHanzi)} ${esc(p.author)}</span>
-      </li>`;
-    }).join("");
-    sheet.hidden = false;
-  }
-  function closeBrowse() { sheet.hidden = true; }
-
-  document.getElementById("browseBtn").addEventListener("click", openBrowse);
-  document.getElementById("closeBrowse").addEventListener("click", closeBrowse);
-  sheet.addEventListener("click", e => { if (e.target === sheet) closeBrowse(); });
-
-  browseList.addEventListener("click", e => {
-    const li = e.target.closest("li");
-    if (!li) return;
-    const set = activeSet();
-    const target = parseInt(li.dataset.i, 10);
-    const base = dayNumber(viewDate);
-    for (let off = 0; off < set.length; off++) {
-      if (indexForDay(base + off, set) === target) {
-        viewDate = new Date(viewDate.getTime() + off * DAY_MS);
-        break;
-      }
-    }
-    closeBrowse();
-    render();
-  });
-
   // ---- Toggle chips ----
   function wireToggle(btnId, prefKey, bodyClass) {
     const btn = document.getElementById(btnId);
@@ -442,7 +345,6 @@
 
   // ---- Mode switch (poems ⇄ door blessings) ----
   const brandZh = document.querySelector(".brand-zh");
-  const browseBtn = document.getElementById("browseBtn");
   const footerEl = document.getElementById("footer");
 
   function updateChrome() {
@@ -451,7 +353,6 @@
       b.classList.toggle("active", b.dataset.mode === prefs.mode));
     document.body.classList.toggle("plaque-mode", plaque);
     if (brandZh) brandZh.textContent = plaque ? "门楣吉语" : "每日一诗";
-    if (browseBtn) browseBtn.textContent = plaque ? "Browse all blessings" : "Browse all poems";
     if (footerEl) {
       footerEl.textContent = plaque
         ? "Auspicious 匾额 · tap any character to see how it's written"

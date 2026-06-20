@@ -17,9 +17,7 @@
         <span class="brand-zh">每日一诗</span>
       </div>
       <div class="date-strip">
-        <button id="prevDay" class="nav-btn" title="Previous poem" aria-label="Previous poem">‹</button>
         <span id="dateLabel" class="date-label"></span>
-        <button id="nextDay" class="nav-btn" title="Next poem" aria-label="Next poem">›</button>
       </div>
       <div class="quick-toggles">
         <button id="toggleTheme" class="chip icon-chip" title="Toggle dark mode" aria-label="Toggle dark mode">☾</button>
@@ -35,22 +33,7 @@
       <button id="modePlaques" class="mode-btn" data-mode="plaques" role="tab">匾 Door blessings</button>
     </div>
     <main id="poemRoot" class="poem"></main>
-    <div class="actions">
-      <button id="todayBtn" class="pill">Today</button>
-      <button id="randomBtn" class="pill">Random</button>
-      <button id="browseBtn" class="pill primary">Browse all poems</button>
-    </div>
     <footer id="footer" class="footer">Classic 唐诗 · tap any character to see how it's written</footer>
-  </div>
-
-  <div id="browseSheet" class="sheet" hidden>
-    <div class="sheet-inner">
-      <div class="sheet-head">
-        <h2>All poems</h2>
-        <button id="closeBrowse" class="pill ghost">Close</button>
-      </div>
-      <ul id="browseList" class="browse-list"></ul>
-    </div>
   </div>
 
   <div id="charPop" class="char-pop" hidden>
