@@ -147,12 +147,12 @@ async function createProduct(p) {
     tags: [`cpseed:${p.seedId}`, ...p.tags]
   };
   const created = await gql(
-    `mutation($input:ProductInput!){
-      productCreate(input:$input){
+    `mutation($product:ProductCreateInput!){
+      productCreate(product:$product){
         product { id variants(first:1){ nodes { id } } }
         userErrors { field message }
       }
-    }`, { input });
+    }`, { product: input });
   checkUserErrors("productCreate", created.productCreate.userErrors);
   const product = created.productCreate.product;
   const variantId = product.variants.nodes[0].id;
