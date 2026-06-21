@@ -72,10 +72,18 @@ The Door blessings rotation picks up new entries automatically.
 |------|---------|
 | `index.html` | Markup and layout |
 | `style.css` | Styling (classical serif theme, light + dark) |
-| `app.js` | Rotation, navigation, tabs, theme, stroke-order writer |
+| `app.js` | Today's item, mode switch, tabs, theme, stroke-order writer |
 | `poems.js` | The poem dataset |
 | `plaques.js` | The door-blessing (匾额) dataset |
 | `chardict.js` | Per-character dictionary definitions |
+| `shop.js` / `shop-config.js` | Optional Shopify store for selling physical plaques |
+
+## Selling physical plaques (optional)
+
+The door blessings can be sold as real wooden plaques — preset designs and a
+custom-engraving designer — via Shopify. The storefront UI is built in but
+**disabled by default**; see [`STORE-SETUP.md`](STORE-SETUP.md) to configure
+and enable it.
 
 ## Credits
 

@@ -63,6 +63,10 @@
       `<span class="hz" data-c="${esc(ch.c)}" data-p="${esc(ch.p)}" data-m="${esc(ch.m)}">${esc(ch.c)}</span>`
     ).join("");
   }
+  function shopPresetPrice() {
+    const c = (typeof SHOP_CONFIG !== "undefined") ? SHOP_CONFIG : null;
+    return (c && c.presetPrice) ? ` — ${esc(c.currency || "")}${esc(c.presetPrice)}` : "";
+  }
 
   // ---- Render ----
   function render() {
@@ -160,6 +164,13 @@
       <div class="poem-head plaque-head">
         <div class="poem-title-en">${esc(p.title)}</div>
         <div class="poem-meta"><span class="plaque-cat">${esc(p.category)}</span></div>
+      </div>
+
+      <div class="shop-cta">
+        <button class="pill primary buy-plaque" data-phrase="${esc(p.phrase)}">
+          Order a real wooden plaque${shopPresetPrice()}
+        </button>
+        <button class="pill design-own" data-seed="${esc(p.phrase)}">✎ Design your own</button>
       </div>
 
       <div class="tabs" role="tablist">

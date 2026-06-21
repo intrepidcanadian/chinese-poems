@@ -241,6 +241,97 @@ body.dark .plaque-board {
   .plaque-board { padding: 26px 16px 20px; }
 }
 
+/* ---------- Store: Buy CTA, designer, toast ---------- */
+.shop-cta {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 18px 0 2px;
+}
+.shop-cta .pill.primary { margin-left: 0; }
+.buy-plaque:disabled { opacity: .6; cursor: default; }
+
+.design-sheet { align-items: center; padding: 18px; }
+.design-card {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+  padding: 24px 22px 20px;
+  width: 100%;
+  max-width: 440px;
+  max-height: 92vh;
+  overflow-y: auto;
+  position: relative;
+  text-align: center;
+}
+.design-title {
+  margin: 0 0 16px;
+  font-family: "Noto Serif SC", serif;
+  font-size: 20px;
+  color: var(--accent);
+}
+.design-card .plaque-board { margin: 0 auto 4px; }
+.design-placeholder { opacity: .35; }
+.design-label {
+  display: block;
+  text-align: left;
+  font-size: 13px;
+  color: var(--ink-soft);
+  letter-spacing: .3px;
+  margin: 18px 0 6px;
+}
+.design-input {
+  width: 100%;
+  font-family: "Noto Serif SC", serif;
+  font-size: 24px;
+  text-align: center;
+  letter-spacing: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fffefb;
+  color: var(--ink);
+}
+body.dark .design-input { background: #28231b; }
+.design-input:focus { outline: none; border-color: var(--accent-soft); }
+.design-hint {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin-top: 8px;
+}
+.design-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
+.design-price { font-size: 18px; color: var(--accent); font-weight: 600; }
+.design-cta .pill.primary { margin-left: 0; }
+
+.shop-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 20px);
+  background: #2a251f;
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+  z-index: 80;
+  max-width: 90vw;
+  text-align: center;
+}
+.shop-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
 /* ---------- Poem card ---------- */
 .poem {
   background: var(--bg-card);

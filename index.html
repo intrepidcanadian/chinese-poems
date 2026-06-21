@@ -36,6 +36,26 @@
     <footer id="footer" class="footer">Classic 唐诗 · tap any character to see how it's written</footer>
   </div>
 
+  <!-- Custom-plaque designer -->
+  <div id="designSheet" class="sheet design-sheet" hidden>
+    <div class="design-card">
+      <button id="designClose" class="writer-close" aria-label="Close">✕</button>
+      <h2 class="design-title">Design your own plaque</h2>
+      <div class="plaque-board" id="designPreview">
+        <div class="plaque-hang" aria-hidden="true"></div>
+        <div class="plaque-phrase" id="designPhrase"></div>
+      </div>
+      <label class="design-label" for="designInput">Your characters</label>
+      <input id="designInput" class="design-input" type="text" maxlength="6"
+             autocomplete="off" placeholder="例如：福" />
+      <div class="design-hint">Up to 6 Chinese characters, engraved on solid wood.</div>
+      <div class="design-cta">
+        <span class="design-price"></span>
+        <button id="designBuy" class="pill primary">Order this plaque</button>
+      </div>
+    </div>
+  </div>
+
   <div id="charPop" class="char-pop" hidden>
     <span class="cp-char"></span>
     <span class="cp-pinyin"></span>
@@ -75,6 +95,8 @@
   <script src="poems.js"></script>
   <script src="plaques.js"></script>
   <script src="chardict.js"></script>
+  <script src="shop-config.js"></script>
   <script src="app.js"></script>
+  <script src="shop.js"></script>
 </body>
 </html>
