@@ -10,7 +10,7 @@
   "use strict";
 
   const cfg = (typeof SHOP_CONFIG !== "undefined") ? SHOP_CONFIG : { enabled: false };
-  const SDK_URL = "https://sdks.shopifycdn.com/js-buy-sdk/v2/latest/index.umd.min.js";
+  const API_VERSION = "2025-10";
 
   // ---- Small transient message ----
   let toastEl = null, toastTimer = null;
@@ -26,62 +26,74 @@
     toastTimer = setTimeout(() => toastEl.classList.remove("show"), 3200);
   }
 
-  // ---- Shopify SDK (loaded lazily) ----
-  let sdkPromise = null;
-  function loadSDK() {
-    if (window.ShopifyBuy) return Promise.resolve(window.ShopifyBuy);
-    if (sdkPromise) return sdkPromise;
-    sdkPromise = new Promise((resolve, reject) => {
-      const s = document.createElement("script");
-      s.src = SDK_URL;
-      s.async = true;
-      s.onload = () => window.ShopifyBuy ? resolve(window.ShopifyBuy) : reject(new Error("SDK missing"));
-      s.onerror = () => reject(new Error("Could not load the store. Check your connection."));
-      document.head.appendChild(s);
+  // ---- Storefront API (Cart) ----
+  async function storefront(query, variables) {
+    const res = await fetch(`https://${cfg.domain}/api/${API_VERSION}/graphql.json`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Storefront-Access-Token": cfg.storefrontAccessToken
+      },
+      body: JSON.stringify({ query, variables })
     });
-    return sdkPromise;
+    if (!res.ok) throw new Error(`Store request failed (${res.status}).`);
+    return res.json();
   }
 
-  // ---- Checkout ----
-  async function checkout(lineItems, btn) {
+  const CART_CREATE = `mutation cartCreate($lines: [CartLineInput!]!) {
+    cartCreate(input: { lines: $lines }) {
+      cart { checkoutUrl totalQuantity }
+      userErrors { field message }
+    }
+  }`;
+
+  // A "soon / sold out" failure is expected pre-launch; show a gentle message.
+  const SOON_RE = /does not exist|not available|availableForSale|sold out|inventory|out of stock/i;
+
+  async function checkout(line, btn) {
     if (!cfg.enabled) {
       toast("Our shop is launching soon — thanks for your interest!");
       return;
     }
+    if (!line.merchandiseId) { toast("This design isn't available to order yet."); return; }
     const label = btn ? btn.textContent : null;
     if (btn) { btn.disabled = true; btn.textContent = "Opening checkout…"; }
+    const restore = () => { if (btn) { btn.disabled = false; if (label) btn.textContent = label; } };
     try {
-      const SB = await loadSDK();
-      const client = SB.buildClient({
-        domain: cfg.domain,
-        storefrontAccessToken: cfg.storefrontAccessToken
+      const json = await storefront(CART_CREATE, {
+        lines: [{ merchandiseId: line.merchandiseId, quantity: line.quantity || 1, attributes: line.attributes || [] }]
       });
-      const co = await client.checkout.create();
-      await client.checkout.addLineItems(co.id, lineItems);
-      window.location.href = co.webUrl;
+      const data = json.data && json.data.cartCreate;
+      const cart = data && data.cart;
+      // A sold-out / unpublished variant doesn't error — Shopify drops the line
+      // to quantity 0 and still returns a checkout URL (an empty cart). Only
+      // redirect when the item actually made it into the cart.
+      if (cart && cart.totalQuantity > 0 && cart.checkoutUrl) {
+        window.location.href = cart.checkoutUrl;
+        return;
+      }
+      const msg = (data && data.userErrors && data.userErrors[0] && data.userErrors[0].message) ||
+        (json.errors && json.errors[0] && json.errors[0].message) || "";
+      if (!cart || cart.totalQuantity === 0 || SOON_RE.test(msg)) {
+        toast("Coming soon — this plaque isn't available to order yet.");
+      } else {
+        toast(msg || "Couldn't start checkout. Please try again.");
+      }
+      restore();
     } catch (err) {
-      toast(err.message || "Something went wrong starting checkout.");
-      if (btn) { btn.disabled = false; if (label) btn.textContent = label; }
+      toast(err.message || "Couldn't start checkout.");
+      restore();
     }
   }
 
   function buyPreset(phrase, btn) {
-    const variantId = cfg.variants && cfg.variants[phrase];
-    if (cfg.enabled && !variantId) {
-      toast("This design isn't available to order yet.");
-      return;
-    }
-    checkout([{ variantId, quantity: 1 }], btn);
+    checkout({ merchandiseId: cfg.variants && cfg.variants[phrase], quantity: 1 }, btn);
   }
 
   function buyCustom(text, btn) {
     const value = (text || "").trim();
     if (!value) { toast("Type the characters you'd like engraved."); return; }
-    checkout([{
-      variantId: cfg.customVariantId,
-      quantity: 1,
-      customAttributes: [{ key: "Engraving", value: value }]
-    }], btn);
+    checkout({ merchandiseId: cfg.customVariantId, quantity: 1, attributes: [{ key: "Engraving", value }] }, btn);
   }
 
   // ---- Custom-plaque designer ----

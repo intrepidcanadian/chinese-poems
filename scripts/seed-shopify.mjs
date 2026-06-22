@@ -37,7 +37,7 @@ const STOREFRONT_TOKEN = process.env.SHOPIFY_STOREFRONT_TOKEN || "";
 const API_VERSION = process.env.SHOPIFY_API_VERSION || "2025-10";
 const PRESET_PRICE = process.env.PLAQUE_PRESET_PRICE || "49";
 const CUSTOM_PRICE = process.env.PLAQUE_CUSTOM_PRICE || "69";
-const VENDOR = "门楣吉语";
+const VENDOR = "BlessingBoard";
 const DRY_RUN = process.argv.includes("--dry-run");
 
 function fail(msg) { console.error("\n✖ " + msg + "\n"); process.exit(1); }

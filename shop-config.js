@@ -12,14 +12,14 @@
 
 const SHOP_CONFIG = {
   // Flip to true only once the store + products + fulfilment are ready.
-  enabled: false,
+  enabled: true,
 
   // From your Shopify admin:
   //   domain                — e.g. "your-store.myshopify.com"
   //   storefrontAccessToken — Settings → Apps → Develop apps → Storefront API
   //                           (this token is meant to be public / client-side)
-  domain: "your-store.myshopify.com",
-  storefrontAccessToken: "",
+  domain: "beefinthecity.myshopify.com",
+  storefrontAccessToken: "06180a9405fd627946a76241f8af33e0",
 
   // Display only (the real prices come from Shopify at checkout).
   currency: "$",
@@ -32,7 +32,25 @@ const SHOP_CONFIG = {
   //   customVariantId — the single "Custom engraved plaque" variant
   /* SEED:BEGIN */
   variants: {
+    "家和万事兴": "gid://shopify/ProductVariant/49288100315363",
+    "出入平安": "gid://shopify/ProductVariant/49288100413667",
+    "紫气东来": "gid://shopify/ProductVariant/49288100577507",
+    "五福临门": "gid://shopify/ProductVariant/49288100708579",
+    "招财进宝": "gid://shopify/ProductVariant/49288100806883",
+    "金玉满堂": "gid://shopify/ProductVariant/49288100937955",
+    "鸿运当头": "gid://shopify/ProductVariant/49288101036259",
+    "吉祥如意": "gid://shopify/ProductVariant/49288101167331",
+    "万事如意": "gid://shopify/ProductVariant/49288101298403",
+    "万象更新": "gid://shopify/ProductVariant/49288101429475",
+    "竹报平安": "gid://shopify/ProductVariant/49288101527779",
+    "国泰民安": "gid://shopify/ProductVariant/49288101658851",
+    "福寿康宁": "gid://shopify/ProductVariant/49288101789923",
+    "一帆风顺": "gid://shopify/ProductVariant/49288101888227",
+    "室雅人和": "gid://shopify/ProductVariant/49288102019299",
+    "厚德载物": "gid://shopify/ProductVariant/49288102117603",
+    "上善若水": "gid://shopify/ProductVariant/49288102248675",
+    "宁静致远": "gid://shopify/ProductVariant/49288102379747"
   },
-  customVariantId: ""
+  customVariantId: "gid://shopify/ProductVariant/49288102543587"
   /* SEED:END */
 };

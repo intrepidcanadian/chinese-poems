@@ -363,7 +363,10 @@
     document.querySelectorAll(".mode-btn").forEach(b =>
       b.classList.toggle("active", b.dataset.mode === prefs.mode));
     document.body.classList.toggle("plaque-mode", plaque);
-    if (brandZh) brandZh.textContent = plaque ? "门楣吉语" : "每日一诗";
+    if (brandZh) brandZh.textContent = plaque ? "BlessingBoard · 门楣吉语" : "每日一诗";
+    document.title = plaque
+      ? "BlessingBoard · 门楣吉语"
+      : "每日一诗 · A Chinese Poem a Day";
     if (footerEl) {
       footerEl.textContent = plaque
         ? "Auspicious 匾额 · tap any character to see how it's written"
