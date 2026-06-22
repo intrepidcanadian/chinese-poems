@@ -18,7 +18,7 @@ const SHOP_CONFIG = {
   //   domain                — e.g. "your-store.myshopify.com"
   //   storefrontAccessToken — Settings → Apps → Develop apps → Storefront API
   //                           (this token is meant to be public / client-side)
-  domain: "beefinthecity.myshopify.com",
+  domain: "blessingboard.myshopify.com",
   storefrontAccessToken: "06180a9405fd627946a76241f8af33e0",
 
   // Display only (the real prices come from Shopify at checkout).
