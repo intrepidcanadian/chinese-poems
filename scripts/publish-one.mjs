@@ -22,6 +22,7 @@ const STORE = argVal("--store") || process.env.SHOPIFY_STORE || "beefinthecity.m
 const SHOPIFY_BIN = process.env.SHOPIFY_BIN || "shopify";
 const SEED = argVal("--seed") || "preset-0";
 const CHANNEL_MATCH = (argVal("--channel") || "headless").toLowerCase();
+const OVERSELL = process.argv.includes("--oversell"); // sell at 0 inventory (demo)
 const J = s => JSON.stringify(String(s));
 function fail(m) { console.error("\n✖ " + m + "\n"); process.exit(1); }
 
@@ -58,7 +59,7 @@ if (!channel) fail(`No sales channel matching "${CHANNEL_MATCH}". Found: ${pubs.
 
 // 2) Find the product tagged cpseed:<seed>
 const prods = runGraphQL(
-  `query { products(first: 100, query: "tag:wooden-plaque") { nodes { id title status tags } } }`).products.nodes;
+  `query { products(first: 100, query: "tag:wooden-plaque") { nodes { id title status tags variants(first: 1) { nodes { id } } } } }`).products.nodes;
 const prod = prods.find(p => (p.tags || []).includes(`cpseed:${SEED}`));
 if (!prod) fail(`No product tagged cpseed:${SEED}. Run the seed script first.`);
 
@@ -82,4 +83,16 @@ const pub = runGraphQL(
 checkUserErrors("publishablePublish", pub.publishablePublish.userErrors);
 console.log(`  ✓ published to ${channel.name}`);
 
-console.log(`\n✔ "${prod.title}" is live on the Storefront API. Test the Buy button on the site.\n`);
+// 5) Optionally allow checkout at 0 inventory (made-to-order / demo)
+if (OVERSELL) {
+  const variantId = prod.variants && prod.variants.nodes[0] && prod.variants.nodes[0].id;
+  if (!variantId) fail("Couldn't find a variant to enable oversell on.");
+  const v = runGraphQL(
+    `mutation { productVariantsBulkUpdate(productId: ${J(prod.id)}, variants: [{ id: ${J(variantId)}, inventoryPolicy: CONTINUE, inventoryItem: { tracked: true } }]) { productVariants { id } userErrors { field message } } }`,
+    { mutation: true });
+  checkUserErrors("productVariantsBulkUpdate", v.productVariantsBulkUpdate.userErrors);
+  console.log("  ✓ oversell enabled (sellable at 0 inventory)");
+}
+
+console.log(`\n✔ "${prod.title}" is live on the Storefront API` +
+  `${OVERSELL ? " and checkout-enabled" : ""}. Test the Buy button on the site.\n`);
